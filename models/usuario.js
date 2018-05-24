@@ -25,6 +25,19 @@ var usuarioSchema = new Schema({
   }
 });
 
+usuarioSchema.methods.removePassword = function(role = false) {
+  var newUser = this.toObject();
+
+  delete newUser.password;
+  delete newUser.__v;
+
+  if (role) {
+    delete newUser.role;
+  }
+
+  return newUser;
+};
+
 usuarioSchema.plugin(uniqueValidator, {
   message: "{PATH} debe de ser unico"
 });

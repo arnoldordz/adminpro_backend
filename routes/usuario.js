@@ -13,20 +13,37 @@ var mdAutenticacion = require("../middlewares/autenticacion");
 
 // Obtener todos los usuarios
 app.get("/", (req, res) => {
-  Usuario.find({}, "nombre email img role").exec((err, usuarios) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        mensaje: "Error cargando usuarios",
-        errors: err
-      });
-    }
+  var desde = req.query.desde || 0;
+  desde = Number(desde);
 
-    res.status(200).json({
-      ok: true,
-      usuarios
+  Usuario.find({}, "nombre email img role")
+    .skip(desde)
+    .limit(5)
+    .exec((err, usuarios) => {
+      if (err) {
+        return res.status(500).json({
+          ok: false,
+          mensaje: "Error cargando usuarios",
+          errors: err
+        });
+      }
+
+      Usuario.count({}, (err, conteo) => {
+        if (err) {
+          return res.status(500).json({
+            ok: false,
+            mensaje: "Error contando usuarios",
+            errors: err
+          });
+        }
+
+        res.status(200).json({
+          ok: true,
+          total: conteo,
+          usuarios
+        });
+      });
     });
-  });
 });
 
 // Actualizar Usuario
@@ -93,6 +110,10 @@ app.post("/", mdAutenticacion.verificarToken, (req, res) => {
         errors: err
       });
     }
+
+    usuarioGuardado = usuarioGuardado.toObject();
+    delete usuarioGuardado.password;
+
     res.status(201).json({
       ok: true,
       usuario: usuarioGuardado,
